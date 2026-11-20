@@ -68,4 +68,18 @@ public class ExpenseService {
         if (months == 0) return BigDecimal.ZERO;
         return getGlobalTotal(expenses).divide(BigDecimal.valueOf(months), 2, RoundingMode.HALF_UP);
     }
+
+
+    /** Achat voiture **/
+
+    // Calcule le nombre de mois nécessaires pour épargner le prix de la voiture.
+    // Épargne mensuelle = revenu mensuel − moyenne mensuelle des dépenses.
+    // Retourne -1 si l'épargne est nulle ou négative.
+
+    public int monthsToSaveCar(List<Expense> expenses, BigDecimal monthlyIncome, BigDecimal carPrice) {
+        BigDecimal monthlySavings = monthlyIncome.subtract(getAvgMonthlyExpenses(expenses));
+        if (monthlySavings.compareTo(BigDecimal.ZERO) <= 0) return -1;
+        double months = Math.ceil(carPrice.doubleValue() / monthlySavings.doubleValue());
+        return (int) months;
+    }
 }

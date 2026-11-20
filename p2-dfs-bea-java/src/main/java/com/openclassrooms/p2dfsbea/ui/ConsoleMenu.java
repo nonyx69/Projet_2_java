@@ -27,7 +27,8 @@ public class ConsoleMenu {
                 case "1" -> showHistory();
                 case "2" -> addExpense();
                 case "3" -> showStats();
-                case "4" -> {
+                case "4" -> simulateCar();
+                case "5" -> {
                     System.out.println("Goodbye");
                     running = false;
                 }
@@ -41,7 +42,8 @@ public class ConsoleMenu {
         System.out.println("1) Show history");
         System.out.println("2) Add expense");
         System.out.println("3) Statistics");
-        System.out.println("4) Quit");
+        System.out.println("4) Car simulation");
+        System.out.println("5) Quit");
         System.out.print("Choose an option: ");
     }
 
@@ -115,6 +117,35 @@ public class ConsoleMenu {
                     .divide(total, 1, RoundingMode.HALF_UP);
             System.out.printf("  %-15s %10s %14s %8s%%%n",
                     entry.getKey(), catTotal, catAvg, share);
+        }
+    }
+
+
+    private void simulateCar() {
+        try {
+            System.out.print("Monthly income (€): ");
+            BigDecimal income = new BigDecimal(scanner.nextLine().trim().replace(',', '.'));
+
+            System.out.print("Car price (€): ");
+            BigDecimal carPrice = new BigDecimal(scanner.nextLine().trim().replace(',', '.'));
+
+            List<Expense> list = service.loadAllExpenses();
+            BigDecimal avgMonthly = service.getAvgMonthlyExpenses(list);
+            BigDecimal monthlySavings = income.subtract(avgMonthly).setScale(2, RoundingMode.HALF_UP);
+
+            System.out.println("\n--- Car Simulation ---");
+            System.out.println("Average monthly expenses: " + avgMonthly + " €");
+            System.out.println("Monthly savings         : " + monthlySavings + " €");
+
+            int months = service.monthsToSaveCar(list, income, carPrice);
+            if (months < 0) {
+                System.out.println("Insufficient savings: your expenses exceed your income get new job please.");
+            } else {
+                System.out.println("Months needed to save " + carPrice + " €: " + months
+                        + " (" + (months / 12) + " year(s) and " + (months % 12) + " month(s))");
+            }
+        } catch (NumberFormatException ex) {
+            System.out.println("Invalid amount format.");
         }
     }
 }
