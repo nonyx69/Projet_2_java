@@ -10,6 +10,8 @@ import java.time.LocalDate;
 import java.time.format.DateTimeParseException;
 import java.util.List;
 import java.util.Scanner;
+import java.math.RoundingMode;
+import java.util.Map;
 
 public class ConsoleMenu {
     private final Scanner scanner = new Scanner(System.in);
@@ -24,7 +26,8 @@ public class ConsoleMenu {
             switch (choice) {
                 case "1" -> showHistory();
                 case "2" -> addExpense();
-                case "3" -> {
+                case "3" -> showStats();
+                case "4" -> {
                     System.out.println("Goodbye");
                     running = false;
                 }
@@ -37,14 +40,23 @@ public class ConsoleMenu {
         System.out.println("\n--- Personal Finance Tracker ---");
         System.out.println("1) Show history");
         System.out.println("2) Add expense");
-        System.out.println("3) Quit");
+        System.out.println("3) Statistics");
+        System.out.println("4) Quit");
         System.out.print("Choose an option: ");
     }
 
     private void showHistory() {
         List<Expense> list = service.loadAllExpenses();
+        if (list.isEmpty()) {
+            System.out.println("No expenses found.");
+            return;
+        }
         System.out.println("\nHistory (most recent first):");
-        list.stream().sorted((a, b) -> b.getDate().compareTo(a.getDate())).forEach(e -> System.out.println(e.toCsvLine()));
+        list.stream()
+                .sorted((a, b) -> b.getDate().compareTo(a.getDate()))
+                .forEach(e -> System.out.println(e.toCsvLine()));
+        System.out.println("---");
+        System.out.println("Total: " + service.getGlobalTotal(list) + " €");
     }
 
     private void addExpense() {
@@ -71,9 +83,38 @@ public class ConsoleMenu {
         } catch (IOException io) {
             System.out.println("Unable to save expense: " + io.getMessage());
         } catch(NumberFormatException ex) {
-        	System.out.println("Invalid amount format. Decimal is expected.");
+            System.out.println("Invalid amount format. Decimal is expected.");
         } catch (Exception ex) {
             System.out.println("Error: " + ex.getMessage());
+        }
+    }
+
+    private void showStats() {
+        List<Expense> list = service.loadAllExpenses();
+        if (list.isEmpty()) {
+            System.out.println("No expenses found.");
+            return;
+        }
+
+        BigDecimal total = service.getGlobalTotal(list);
+        long months = service.countDistinctMonths(list);
+        BigDecimal avgMonthly = service.getAvgMonthlyExpenses(list);
+        Map<String, BigDecimal> categoryTotals = service.getCategoryTotals(list);
+
+        System.out.println("\n--- Statistics ---");
+        System.out.println("Total expenses : " + total + " €");
+        System.out.println("Period         : " + months + " month(s)");
+        System.out.println("Monthly average: " + avgMonthly + " €");
+        System.out.println("\nBy category:");
+        System.out.printf("  %-15s %10s %14s %9s%n", "Category", "Total (€)", "Avg/month (€)", "Share");
+        System.out.println("  " + "-".repeat(53));
+        for (Map.Entry<String, BigDecimal> entry : categoryTotals.entrySet()) {
+            BigDecimal catTotal = entry.getValue().setScale(2, RoundingMode.HALF_UP);
+            BigDecimal catAvg = catTotal.divide(BigDecimal.valueOf(months), 2, RoundingMode.HALF_UP);
+            BigDecimal share = catTotal.multiply(new BigDecimal("100"))
+                    .divide(total, 1, RoundingMode.HALF_UP);
+            System.out.printf("  %-15s %10s %14s %8s%%%n",
+                    entry.getKey(), catTotal, catAvg, share);
         }
     }
 }
