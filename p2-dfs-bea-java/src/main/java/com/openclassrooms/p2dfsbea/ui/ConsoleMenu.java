@@ -28,7 +28,8 @@ public class ConsoleMenu {
                 case "2" -> addExpense();
                 case "3" -> showStats();
                 case "4" -> simulateCar();
-                case "5" -> {
+                case "5" -> simulateMortgage();
+                case "6" -> {
                     System.out.println("Goodbye");
                     running = false;
                 }
@@ -43,7 +44,8 @@ public class ConsoleMenu {
         System.out.println("2) Add expense");
         System.out.println("3) Statistics");
         System.out.println("4) Car simulation");
-        System.out.println("5) Quit");
+        System.out.println("5) Mortgage home simulation");
+        System.out.println("6) Quit");
         System.out.print("Choose an option: ");
     }
 
@@ -146,6 +148,31 @@ public class ConsoleMenu {
             }
         } catch (NumberFormatException ex) {
             System.out.println("Invalid amount format.");
+        }
+    }
+
+
+    private void simulateMortgage() {
+        try {
+            System.out.print("Monthly income (€): ");
+            BigDecimal income = new BigDecimal(scanner.nextLine().trim().replace(',', '.'));
+
+            System.out.print("Annual interest rate (%, e.g. 3.5): ");
+            double rate = Double.parseDouble(scanner.nextLine().trim().replace(',', '.'));
+
+            System.out.print("Duration (years): ");
+            int years = Integer.parseInt(scanner.nextLine().trim());
+
+            BigDecimal maxPayment = income.multiply(new BigDecimal("0.35"))
+                    .setScale(2, RoundingMode.HALF_UP);
+            BigDecimal capacity = service.mortgageCapacity(income, rate, years * 12);
+
+            System.out.println("\n--- Mortgage Simulation ---");
+            System.out.println("Max monthly payment (35%): " + maxPayment + " €");
+            System.out.println("Duration                 : " + years + " year(s) at " + rate + " %");
+            System.out.println("Borrowing capacity       : " + capacity + " €");
+        } catch (NumberFormatException ex) {
+            System.out.println("Invalid input format.");
         }
     }
 }

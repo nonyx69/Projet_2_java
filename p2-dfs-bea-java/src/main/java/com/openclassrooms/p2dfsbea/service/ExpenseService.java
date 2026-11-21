@@ -82,4 +82,20 @@ public class ExpenseService {
         double months = Math.ceil(carPrice.doubleValue() / monthlySavings.doubleValue());
         return (int) months;
     }
+
+
+    /**Pret immobilier**/
+
+//     calcule la capacité d'emprunt avec un taux d'endettement de 35 %.
+//     formule : P = M × (1 − (1+r)^−n) / r
+//     M = revenu × 35 %, r = taux annuel / 12 / 100, n = durée (mois)
+
+    public BigDecimal mortgageCapacity(BigDecimal monthlyIncome, double annualRatePct, int durationMonths) {
+        BigDecimal maxPayment = monthlyIncome.multiply(new BigDecimal("0.35"))
+                .setScale(2, RoundingMode.HALF_UP);
+        double r = annualRatePct / 100.0 / 12.0;
+        double M = maxPayment.doubleValue();
+        double P = (r == 0) ? M * durationMonths : M * (1 - Math.pow(1 + r, -durationMonths)) / r;
+        return BigDecimal.valueOf(P).setScale(2, RoundingMode.HALF_UP);
+    }
 }
